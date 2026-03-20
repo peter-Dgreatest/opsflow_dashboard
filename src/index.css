@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    background-color: #0E0F11;
+    color: #F0F0F0;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2A2D35; border-radius: 3px; }
+}
+
+@layer components {
+  .card {
+    @apply bg-card border border-border rounded-xl;
+  }
+  .btn-primary {
+    @apply bg-lime-400 text-bg font-semibold text-xs px-4 py-2 rounded-lg hover:bg-lime-300 transition-colors cursor-pointer;
+  }
+  .btn-ghost {
+    @apply bg-transparent border border-border text-text text-xs px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer;
+  }
+  .input-base {
+    @apply bg-input border border-border rounded-lg text-text text-sm px-3 py-2 outline-none focus:border-white/20 w-full transition-colors;
+  }
+  .select-base {
+    @apply bg-input border border-border rounded-lg text-text text-xs px-3 py-1.5 outline-none focus:border-white/20 cursor-pointer;
+  }
+  .badge {
+    @apply text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .status-planned    { @apply bg-blue-500/10 text-blue-400; }
+  .status-confirmed  { @apply bg-violet-500/10 text-violet-400; }
+  .status-in_progress{ @apply bg-sky-500/10 text-sky-400; }
+  .status-completed  { @apply bg-green-500/10 text-green-400; }
+  .status-cancelled  { @apply bg-red-500/10 text-red-400; }
+  .status-active     { @apply bg-emerald-500/10 text-emerald-400; }
+  .status-inactive   { @apply bg-zinc-500/10 text-zinc-400; }
+  .status-deprecated { @apply bg-red-500/10 text-red-400; }
+  .status-available  { @apply bg-green-500/10 text-green-400; }
+  .status-in_use     { @apply bg-sky-500/10 text-sky-400; }
+  .status-maintenance{ @apply bg-yellow-500/10 text-yellow-400; }
+  .status-retired    { @apply bg-zinc-500/10 text-zinc-400; }
+  .status-pending    { @apply bg-yellow-500/10 text-yellow-400; }
+  .status-completed-r{ @apply bg-green-500/10 text-green-400; }
+  .status-dismissed  { @apply bg-zinc-500/10 text-zinc-400; }
+  .status-open       { @apply bg-sky-500/10 text-sky-400; }
+  .status-follow_up  { @apply bg-amber-500/10 text-amber-400; }
+  .status-converted  { @apply bg-green-500/10 text-green-400; }
+  .status-closed     { @apply bg-zinc-500/10 text-zinc-400; }
+}
