@@ -5,30 +5,32 @@ import {
   CreditCard, Receipt, Bell, BarChart2, Settings,
   ChevronLeft, ChevronRight, UserCheck, TrendingUp, Search
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const NAV = [
-  { key: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard, accent: '#a3e635', section: 'main' },
-  { key: 'jobs',       label: 'Jobs',        icon: Briefcase,       accent: '#38bdf8', section: 'main' },
-  { key: 'leads',      label: 'Leads',       icon: TrendingUp,      accent: '#7dd3fc', section: 'main' },
-  { key: 'customers',  label: 'Customers',   icon: Users,           accent: '#a78bfa', section: 'main' },
-  { key: 'crew',       label: 'Crew',        icon: UserCheck,       accent: '#fb923c', section: 'operations' },
-  { key: 'equipment',  label: 'Equipment',   icon: HardDrive,       accent: '#34d399', section: 'operations' },
-  { key: 'vendors',    label: 'Vendors',     icon: Truck,           accent: '#f472b6', section: 'operations' },
-  { key: 'payments',   label: 'Payments',    icon: CreditCard,      accent: '#4ade80', section: 'finance' },
-  { key: 'expenses',   label: 'Expenses',    icon: Receipt,         accent: '#facc15', section: 'finance' },
-  { key: 'reminders',  label: 'Reminders',   icon: Bell,            accent: '#fb7185', section: 'finance' },
-  { key: 'reports',    label: 'Reports',     icon: BarChart2,       accent: '#e879f9', section: 'analytics' },
-  { key: 'settings',   label: 'Settings',    icon: Settings,        accent: '#6b7280', section: 'analytics' },
+  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, accent: '#a3e635', section: 'main' },
+  { key: 'jobs', label: 'Jobs', icon: Briefcase, accent: '#38bdf8', section: 'main' },
+  { key: 'leads', label: 'Leads', icon: TrendingUp, accent: '#7dd3fc', section: 'main' },
+  { key: 'customers', label: 'Customers', icon: Users, accent: '#a78bfa', section: 'main' },
+  { key: 'crew', label: 'Crew', icon: UserCheck, accent: '#fb923c', section: 'operations' },
+  { key: 'equipment', label: 'Equipment', icon: HardDrive, accent: '#34d399', section: 'operations' },
+  { key: 'vendors', label: 'Vendors', icon: Truck, accent: '#f472b6', section: 'operations' },
+  { key: 'payments', label: 'Payments', icon: CreditCard, accent: '#4ade80', section: 'finance' },
+  { key: 'expenses', label: 'Expenses', icon: Receipt, accent: '#facc15', section: 'finance' },
+  { key: 'reminders', label: 'Reminders', icon: Bell, accent: '#fb7185', section: 'finance' },
+  { key: 'reports', label: 'Reports', icon: BarChart2, accent: '#e879f9', section: 'analytics' },
+  { key: 'settings', label: 'Settings', icon: Settings, accent: '#6b7280', section: 'analytics' },
 ];
 
 const SECTIONS = [
-  { key: 'main',       label: 'Main' },
+  { key: 'main', label: 'Main' },
   { key: 'operations', label: 'Operations' },
-  { key: 'finance',    label: 'Finance' },
-  { key: 'analytics',  label: 'Analytics' },
+  { key: 'finance', label: 'Finance' },
+  { key: 'analytics', label: 'Analytics' },
 ];
 
 export function Sidebar({ active, onChange }) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -53,7 +55,8 @@ export function Sidebar({ active, onChange }) {
                 const Icon = item.icon;
                 const isActive = active === item.key;
                 return (
-                  <button key={item.key} onClick={() => onChange(item.key)}
+                  <button key={item.key}
+                    onClick={() => navigate(`/${item.key}`)}
                     title={collapsed ? item.label : undefined}
                     className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left transition-all duration-100 cursor-pointer mb-0.5
                       ${isActive ? 'bg-white/[0.07]' : 'hover:bg-white/[0.04]'}`}>
@@ -83,7 +86,7 @@ export function Sidebar({ active, onChange }) {
         {!collapsed && (
           <div className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer mb-1">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-lime-400 to-emerald-400 flex items-center justify-center text-bg text-xs font-bold shrink-0">
-              {(user?.fullName || 'U').slice(0,2).toUpperCase()}
+              {(user?.fullName || 'U').slice(0, 2).toUpperCase()}
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-medium truncate">{user?.fullName || 'User'}</p>

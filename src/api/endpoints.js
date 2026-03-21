@@ -133,6 +133,27 @@ export const reportsApi = {
   monthly: (params) => client.get('/summaries/monthly', { params }).then(r => r.data),
   yearly: (params) => client.get('/summaries/yearly', { params }).then(r => r.data),
   weekly: (params) => client.get('/summaries/weekly', { params }).then(r => r.data),
+
+};
+
+export const reportsApi1 = {
+  // existing ones (keep if still used elsewhere)
+  financialSummary: (p) => client.get('/reports/financial-summary', { params: p }),
+  jobsSummary: (p) => client.get('/reports/jobs-summary', { params: p }),
+  customersSummary: (p) => client.get('/reports/customers-summary', { params: p }),
+  crewSummary: (p) => client.get('/reports/crew-summary', { params: p }),
+  weeklySummary: (p) => client.get('/reports/weekly-summary', { params: p }),
+  monthlySummary: (p) => client.get('/reports/monthly-summary', { params: p }),
+  yearlySummary: (p) => client.get('/reports/yearly-summary', { params: p }),
+
+  // new ones used by ReportsPage
+  monthly: () => client.get('/reports/monthly'),
+  financial: (p) => client.get('/reports/financial', { params: p }),
+  jobs: (p) => client.get('/reports/jobs', { params: p }),
+  crew: () => client.get('/reports/crew'),
+  equipment: () => client.get('/reports/equipment'),
+  customers: () => client.get('/reports/customers'),
+  expenses: (p) => client.get('/reports/expenses', { params: p }),
 };
 
 // ── INVOICES ──────────────────────────────────────────────────────────────────

@@ -109,7 +109,7 @@ export default function ReportsPage() {
   const { data: monthly = [] } = useQuery({ queryKey: ['monthly-report'], queryFn: () => reportsApi.monthly(), select: normalize });
 
   // Aggregate KPIs from financial report
-  const totalRevenue = financial.totalRevenue || monthly.reduce((s, m) => s + (parseFloat(m.revenue) || parseFloat(m.totalRevenue) || 0), 0);
+  const totalRevenue = financial.totalRevenue || monthly?.reduce((s, m) => s + (parseFloat(m.revenue) || parseFloat(m.totalRevenue) || 0), 0);
   const totalProfit = financial.totalProfit || monthly.reduce((s, m) => s + (parseFloat(m.profit) || parseFloat(m.totalProfit) || 0), 0);
   const totalExpenses = financial.totalExpenses || monthly.reduce((s, m) => s + (parseFloat(m.expenses) || parseFloat(m.totalExpenses) || 0), 0);
   const avgMargin = totalRevenue > 0 ? +((totalProfit / totalRevenue) * 100).toFixed(1) : 0;
@@ -277,7 +277,7 @@ export default function ReportsPage() {
                   { label: 'Job', accessor: 'jobTitle', render: r => <span className="text-xs font-medium">{r.jobTitle || r.title}</span> },
                   { label: 'Revenue', accessor: 'totalRevenue', sortable: true, render: r => <span className="font-mono text-green-400">{fmtCompact(r.totalRevenue || 0)}</span> },
                   { label: 'Profit', accessor: 'jobProfit', sortable: true, render: r => <span className="font-mono text-lime-400">{fmtCompact(r.jobProfit || 0)}</span> },
-                  { label: 'Margin', accessor: 'profitMargin', sortable: true, render: r => <span className="font-mono text-xs">{(r.profitMargin || 0).toFixed(1)}%</span> },
+                  { label: 'Margin', accessor: 'profitMargin', sortable: true, render: r => <span className="font-mono text-xs">{parseFloat(r.profitMargin || 0).toFixed(1)}%</span> },
                 ]} data={jobsReport} pageSize={8} searchable={false} />
               </Card>
             )}
@@ -357,8 +357,8 @@ export default function ReportsPage() {
                 {eqReport.length === 0
                   ? <div className="py-8 text-center text-muted text-xs">No data</div>
                   : <div className="space-y-3 mt-2">
-                    {[...eqReport].sort((a, b) => (b.utilizationPct || 0) - (a.utilizationPct || 0)).slice(0, 7).map((e, i) => {
-                      const pct = e.utilizationPct || e.utilization_pct || 0;
+                    {[...eqReport].sort((a, b) => (parseFloat(b.utilizationPct) || 0) - (parseFloat(a.utilizationPct) || 0)).slice(0, 7).map((e, i) => {
+                      const pct = Math.min(100, parseFloat(e.utilizationPct || e.utilization_pct || 0));
                       const col = pct >= 70 ? '#34d399' : pct >= 40 ? '#facc15' : '#fb7185';
                       return (
                         <div key={i}>
