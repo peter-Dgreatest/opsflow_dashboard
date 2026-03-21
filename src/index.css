@@ -2,54 +2,185 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Light theme (default) ───────────────────────────────────────────────── */
+:root {
+  --bg: #F4F5F7;
+  --card: #FFFFFF;
+  --border: #E2E4E9;
+  --input: #F0F1F4;
+  --text: #111318;
+  --muted: #6B7280;
+  --accent: #84cc16;
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────────────── */
+:root.dark {
+  --bg: #0E0F11;
+  --card: #16181C;
+  --border: #2A2D35;
+  --input: #1E2026;
+  --text: #F0F0F0;
+  --muted: #6B7280;
+  --accent: #a3e635;
+}
+
 @layer base {
-  * { box-sizing: border-box; }
-  body {
-    background-color: #0E0F11;
-    color: #F0F0F0;
-    font-family: 'DM Sans', system-ui, sans-serif;
+  * {
+    box-sizing: border-box;
   }
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #2A2D35; border-radius: 3px; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
 }
 
 @layer components {
   .card {
-    @apply bg-card border border-border rounded-xl;
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    @apply rounded-xl;
   }
+
   .btn-primary {
-    @apply bg-lime-400 text-bg font-semibold text-xs px-4 py-2 rounded-lg hover:bg-lime-300 transition-colors cursor-pointer;
+    @apply bg-lime-500 text-white font-semibold text-xs px-4 py-2 rounded-lg hover:bg-lime-400 transition-colors cursor-pointer;
   }
+
   .btn-ghost {
-    @apply bg-transparent border border-border text-text text-xs px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer;
+    background-color: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    @apply text-xs px-3 py-1.5 rounded-lg hover:opacity-80 transition-colors cursor-pointer;
   }
+
   .input-base {
-    @apply bg-input border border-border rounded-lg text-text text-sm px-3 py-2 outline-none focus:border-white/20 w-full transition-colors;
+    background-color: var(--input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    @apply rounded-lg text-sm px-3 py-2 outline-none w-full transition-colors;
   }
+
+  .input-base:focus {
+    border-color: var(--muted);
+  }
+
   .select-base {
-    @apply bg-input border border-border rounded-lg text-text text-xs px-3 py-1.5 outline-none focus:border-white/20 cursor-pointer;
+    background-color: var(--input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    @apply rounded-lg text-xs px-3 py-1.5 outline-none cursor-pointer;
   }
+
   .badge {
     @apply text-xs font-medium px-2 py-0.5 rounded-full;
   }
-  .status-planned    { @apply bg-blue-500/10 text-blue-400; }
-  .status-confirmed  { @apply bg-violet-500/10 text-violet-400; }
-  .status-in_progress{ @apply bg-sky-500/10 text-sky-400; }
-  .status-completed  { @apply bg-green-500/10 text-green-400; }
-  .status-cancelled  { @apply bg-red-500/10 text-red-400; }
-  .status-active     { @apply bg-emerald-500/10 text-emerald-400; }
-  .status-inactive   { @apply bg-zinc-500/10 text-zinc-400; }
-  .status-deprecated { @apply bg-red-500/10 text-red-400; }
-  .status-available  { @apply bg-green-500/10 text-green-400; }
-  .status-in_use     { @apply bg-sky-500/10 text-sky-400; }
-  .status-maintenance{ @apply bg-yellow-500/10 text-yellow-400; }
-  .status-retired    { @apply bg-zinc-500/10 text-zinc-400; }
-  .status-pending    { @apply bg-yellow-500/10 text-yellow-400; }
-  .status-completed-r{ @apply bg-green-500/10 text-green-400; }
-  .status-dismissed  { @apply bg-zinc-500/10 text-zinc-400; }
-  .status-open       { @apply bg-sky-500/10 text-sky-400; }
-  .status-follow_up  { @apply bg-amber-500/10 text-amber-400; }
-  .status-converted  { @apply bg-green-500/10 text-green-400; }
-  .status-closed     { @apply bg-zinc-500/10 text-zinc-400; }
+
+  .status-planned {
+    @apply bg-blue-500/10 text-blue-600 dark:text-blue-400;
+  }
+
+  .status-confirmed {
+    @apply bg-violet-500/10 text-violet-600 dark:text-violet-400;
+  }
+
+  .status-in_progress {
+    @apply bg-sky-500/10 text-sky-600 dark:text-sky-400;
+  }
+
+  .status-completed {
+    @apply bg-green-500/10 text-green-600 dark:text-green-400;
+  }
+
+  .status-cancelled {
+    @apply bg-red-500/10 text-red-600 dark:text-red-400;
+  }
+
+  .status-active {
+    @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400;
+  }
+
+  .status-inactive {
+    @apply bg-zinc-500/10 text-zinc-500 dark:text-zinc-400;
+  }
+
+  .status-deprecated {
+    @apply bg-red-500/10 text-red-600 dark:text-red-400;
+  }
+
+  .status-available {
+    @apply bg-green-500/10 text-green-600 dark:text-green-400;
+  }
+
+  .status-in_use {
+    @apply bg-sky-500/10 text-sky-600 dark:text-sky-400;
+  }
+
+  .status-maintenance {
+    @apply bg-yellow-500/10 text-yellow-600 dark:text-yellow-400;
+  }
+
+  .status-retired {
+    @apply bg-zinc-500/10 text-zinc-500 dark:text-zinc-400;
+  }
+
+  .status-pending {
+    @apply bg-yellow-500/10 text-yellow-600 dark:text-yellow-400;
+  }
+
+  .status-open {
+    @apply bg-sky-500/10 text-sky-600 dark:text-sky-400;
+  }
+
+  .status-follow_up {
+    @apply bg-amber-500/10 text-amber-600 dark:text-amber-400;
+  }
+
+  .status-converted {
+    @apply bg-green-500/10 text-green-600 dark:text-green-400;
+  }
+
+  .status-closed {
+    @apply bg-zinc-500/10 text-zinc-500 dark:text-zinc-400;
+  }
+}
+
+/* Tailwind bg/border/text mapped to CSS vars for components that use them */
+.bg-bg {
+  background-color: var(--bg);
+}
+
+.bg-card {
+  background-color: var(--card);
+}
+
+.bg-input {
+  background-color: var(--input);
+}
+
+.border-border {
+  border-color: var(--border);
+}
+
+.text-text {
+  color: var(--text);
+}
+
+.text-muted {
+  color: var(--muted);
 }
