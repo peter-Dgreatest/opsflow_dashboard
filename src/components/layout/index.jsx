@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Briefcase, Users, HardDrive, Truck,
   CreditCard, Receipt, Bell, BarChart2, Settings,
   ChevronLeft, ChevronRight, UserCheck, TrendingUp, Search,
-  Sun, Moon, Menu, X,
+  Sun, Moon, Menu, X, HelpCircle,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -22,6 +22,7 @@ const NAV = [
   { key: 'reminders', label: 'Reminders', icon: Bell, accent: '#fb7185', section: 'finance' },
   { key: 'reports', label: 'Reports', icon: BarChart2, accent: '#e879f9', section: 'analytics' },
   { key: 'settings', label: 'Settings', icon: Settings, accent: '#6b7280', section: 'analytics' },
+  { key: 'help', label: 'Help', icon: HelpCircle, accent: '#38bdf8', section: 'analytics' },
 ];
 
 const SECTIONS = [

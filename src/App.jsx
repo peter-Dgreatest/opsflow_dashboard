@@ -17,6 +17,7 @@ import Expenses from './pages/Expenses';
 import Reminders from './pages/Reminders';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Help from './pages/Help';
 
 function AppShell() {
   const { user, loading } = useAuth();
@@ -57,6 +58,7 @@ function AppShell() {
             <Route path="/reminders" element={<Reminders />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/help" element={<Help />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
