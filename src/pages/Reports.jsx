@@ -11,6 +11,7 @@ import { fmtCompact, fmt } from '../utils/format';
 import { reportsApi } from '../api/endpoints';
 import { Download, BarChart2, TrendingUp } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const COLORS = ['#a3e635', '#34d399', '#38bdf8', '#a78bfa', '#fb923c', '#f472b6', '#facc15'];
 
@@ -144,9 +145,12 @@ export default function ReportsPage() {
     a.click();
   };
 
+
+  const { setOpen } = useMobileMenu();
+
   return (
     <>
-      <Topbar title="Reports" subtitle="Financial & operational analytics"
+      <Topbar title="Reports" subtitle="Financial & operational analytics" onMenuClick={() => setOpen(true)}
         actions={
           <div className="flex gap-2">
             <div className="flex gap-1 bg-input border border-border rounded-lg p-1">

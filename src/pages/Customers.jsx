@@ -8,12 +8,14 @@ import { fmtCompact, fmtDate } from '../utils/format';
 import { customersApi } from '../api/endpoints';
 import { Plus, Users, DollarSign, TrendingUp, Star, Pencil, Trash2 } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
+
 const normalize = d => d?.data || d || [];
-const EMPTY = { fullName:'', phone:'', email:'', companyName:'', notes:'' };
+const EMPTY = { fullName: '', phone: '', email: '', companyName: '', notes: '' };
 
 function CustomerForm({ initial = EMPTY, onSubmit, onClose, loading }) {
   const [form, setForm] = useState({ ...EMPTY, ...initial });
-  const set = (k,v) => setForm(f => ({...f,[k]:v}));
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const handle = (e) => {
     e.preventDefault();
     if (!form.fullName) return toast.error('Full name is required');
@@ -22,14 +24,14 @@ function CustomerForm({ initial = EMPTY, onSubmit, onClose, loading }) {
   return (
     <form onSubmit={handle}>
       <FormRow>
-        <Input label="Full Name" required value={form.fullName} onChange={e=>set('fullName',e.target.value)} placeholder="e.g. John Doe" />
-        <Input label="Company Name" value={form.companyName||''} onChange={e=>set('companyName',e.target.value)} placeholder="Optional" />
+        <Input label="Full Name" required value={form.fullName} onChange={e => set('fullName', e.target.value)} placeholder="e.g. John Doe" />
+        <Input label="Company Name" value={form.companyName || ''} onChange={e => set('companyName', e.target.value)} placeholder="Optional" />
       </FormRow>
       <FormRow>
-        <Input label="Phone" value={form.phone||''} onChange={e=>set('phone',e.target.value)} placeholder="+234-800-000-0000" />
-        <Input label="Email" type="email" value={form.email||''} onChange={e=>set('email',e.target.value)} placeholder="email@example.com" />
+        <Input label="Phone" value={form.phone || ''} onChange={e => set('phone', e.target.value)} placeholder="+234-800-000-0000" />
+        <Input label="Email" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} placeholder="email@example.com" />
       </FormRow>
-      <Textarea label="Notes" value={form.notes||''} rows={2} onChange={e=>set('notes',e.target.value)} placeholder="Any notes about this customer…" />
+      <Textarea label="Notes" value={form.notes || ''} rows={2} onChange={e => set('notes', e.target.value)} placeholder="Any notes about this customer…" />
       <FormActions onClose={onClose} loading={loading} />
     </form>
   );
@@ -37,7 +39,7 @@ function CustomerForm({ initial = EMPTY, onSubmit, onClose, loading }) {
 
 export default function CustomersPage() {
   const qc = useQueryClient();
-  const [modal, setModal]   = useState(null);
+  const [modal, setModal] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
 
@@ -64,11 +66,12 @@ export default function CustomersPage() {
   });
 
   const COLS = [
-    { label:'Customer', accessor:'fullName', sortable:true,
+    {
+      label: 'Customer', accessor: 'fullName', sortable: true,
       render: r => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-violet-400/10 flex items-center justify-center text-violet-400 text-xs font-bold shrink-0">
-            {r.fullName?.slice(0,2).toUpperCase()}
+            {r.fullName?.slice(0, 2).toUpperCase()}
           </div>
           <div>
             <p className="font-medium text-xs">{r.fullName}</p>
@@ -77,35 +80,38 @@ export default function CustomersPage() {
         </div>
       )
     },
-    { label:'Phone',  accessor:'phone', render: r => r.phone  || '—' },
-    { label:'Email',  accessor:'email', render: r => r.email  || '—' },
-    { label:'Code',   accessor:'customerCode', render: r => <span className="font-mono text-[10px] text-muted">{r.customerCode}</span> },
-    { label:'Since',  accessor:'createdAt', sortable:true, render: r => fmtDate(r.createdAt) },
-    { label:'Status', render: r => <StatusBadge status={r.isTentative ? 'pending' : 'active'} /> },
-    { label:'', render: r => (
-      <div className="flex gap-1.5">
-        <button onClick={() => { setEditing(r); setModal('edit'); }}
-          className="w-6 h-6 rounded bg-white/5 text-muted hover:text-text hover:bg-white/10 flex items-center justify-center cursor-pointer transition-colors">
-          <Pencil size={11} />
-        </button>
-        <button onClick={() => setDeleting(r)}
-          className="w-6 h-6 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center cursor-pointer transition-colors">
-          <Trash2 size={11} />
-        </button>
-      </div>
-    )},
+    { label: 'Phone', accessor: 'phone', render: r => r.phone || '—' },
+    { label: 'Email', accessor: 'email', render: r => r.email || '—' },
+    { label: 'Code', accessor: 'customerCode', render: r => <span className="font-mono text-[10px] text-muted">{r.customerCode}</span> },
+    { label: 'Since', accessor: 'createdAt', sortable: true, render: r => fmtDate(r.createdAt) },
+    { label: 'Status', render: r => <StatusBadge status={r.isTentative ? 'pending' : 'active'} /> },
+    {
+      label: '', render: r => (
+        <div className="flex gap-1.5">
+          <button onClick={() => { setEditing(r); setModal('edit'); }}
+            className="w-6 h-6 rounded bg-white/5 text-muted hover:text-text hover:bg-white/10 flex items-center justify-center cursor-pointer transition-colors">
+            <Pencil size={11} />
+          </button>
+          <button onClick={() => setDeleting(r)}
+            className="w-6 h-6 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center cursor-pointer transition-colors">
+            <Trash2 size={11} />
+          </button>
+        </div>
+      )
+    },
   ];
 
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Customers" subtitle="Client management"
+      <Topbar title="Customers" subtitle="Client management" onMenuClick={() => setOpen(true)}
         actions={<button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5"><Plus size={13} />Add Customer</button>} />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-          <KpiCard label="Total Customers" value={customers.length}     accent="violet" icon={Users} />
-          <KpiCard label="Active"  value={customers.filter(c=>!c.isTentative).length} accent="green" icon={TrendingUp} />
-          <KpiCard label="Tentative" value={customers.filter(c=>c.isTentative).length} accent="yellow" icon={Star} />
-          <KpiCard label="With Email" value={customers.filter(c=>c.email).length}     accent="sky" icon={DollarSign} />
+          <KpiCard label="Total Customers" value={customers.length} accent="violet" icon={Users} />
+          <KpiCard label="Active" value={customers.filter(c => !c.isTentative).length} accent="green" icon={TrendingUp} />
+          <KpiCard label="Tentative" value={customers.filter(c => c.isTentative).length} accent="yellow" icon={Star} />
+          <KpiCard label="With Email" value={customers.filter(c => c.email).length} accent="sky" icon={DollarSign} />
         </div>
         <Card title="All Customers" subtitle={`${customers.length} clients`}>
           {isLoading
@@ -115,10 +121,10 @@ export default function CustomersPage() {
         </Card>
       </div>
 
-      <Modal title="Add Customer" open={modal==='create'} onClose={() => setModal(null)}>
+      <Modal title="Add Customer" open={modal === 'create'} onClose={() => setModal(null)}>
         <CustomerForm loading={createMut.isPending} onClose={() => setModal(null)} onSubmit={data => createMut.mutate(data)} />
       </Modal>
-      <Modal title="Edit Customer" open={modal==='edit'} onClose={() => { setModal(null); setEditing(null); }}>
+      <Modal title="Edit Customer" open={modal === 'edit'} onClose={() => { setModal(null); setEditing(null); }}>
         {editing && <CustomerForm initial={editing} loading={updateMut.isPending}
           onClose={() => { setModal(null); setEditing(null); }}
           onSubmit={data => updateMut.mutate({ code: editing.customerCode, data })} />}

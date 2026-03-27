@@ -9,6 +9,7 @@ import { fmtCompact, fmt, fmtDate } from '../utils/format';
 import { equipmentApi } from '../api/endpoints';
 import { Plus, HardDrive, DollarSign, Activity, Package, Pencil, Trash2 } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const STATUS_OPTS = ['active', 'inactive', 'deprecated'].map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
 const EMPTY = { name: '', category: '', qty: 1, pricePerUnit: '', totalCostOfPurchase: '', status: 'active', notes: '' };
@@ -77,9 +78,10 @@ export function EquipmentPage() {
     },
   ];
 
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Equipment" subtitle="Inventory management"
+      <Topbar title="Equipment" subtitle="Inventory management" onMenuClick={() => setOpen(true)}
         actions={<button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5"><Plus size={13} />Add Equipment</button>} />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

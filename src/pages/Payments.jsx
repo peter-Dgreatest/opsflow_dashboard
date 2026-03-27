@@ -8,6 +8,7 @@ import { fmtCompact, fmt, fmtDate } from '../utils/format';
 import { paymentsApi, jobsApi, customersApi } from '../api/endpoints';
 import { Plus, CreditCard, DollarSign, TrendingUp, Trash2, Pencil } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const METHOD_OPTS = ['cash', 'bank', 'transfer', 'pos', 'other'].map(v => ({ value: v, label: v.toUpperCase() }));
 const EMPTY = { jobId: '', customerCode: '', amount: '', method: 'cash', datePaid: '', notes: '' };
@@ -100,9 +101,12 @@ export default function PaymentsPage() {
     },
   ];
 
+
+  const { setOpen } = useMobileMenu();
+
   return (
     <>
-      <Topbar title="Payments" subtitle="Customer payment records"
+      <Topbar title="Payments" subtitle="Customer payment records" onMenuClick={() => setOpen(true)}
         actions={<button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5"><Plus size={13} />Record Payment</button>} />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

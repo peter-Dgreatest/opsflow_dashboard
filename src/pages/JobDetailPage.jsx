@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { jobDetailApi } from '../api/jobDetailApi';
 import { equipmentApi, crewApi } from '../api/endpoints';
 import { Modal, Input, Textarea, Select, FormRow, FormActions } from '../components/modals/Modal';
 import { fmt, fmtCompact, fmtDate } from '../utils/format';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, Pencil, Menu } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const nr = d => d?.data || d;
 
@@ -27,7 +28,7 @@ const STATUS_CONFIG = {
 };
 
 // ─── helper: always pass the full {value,label} object to react-select-style Select ──
-const findOpt = (opts, val) => opts.find(o => o.value === val.toUpperCase()) ?? null;
+const findOpt = (opts, val) => opts.find(o => o.value === String(val ?? '').toUpperCase()) ?? null;
 
 // ─── UI primitives ────────────────────────────────────────────────────────────
 function StatusPill({ status }) {
@@ -92,7 +93,11 @@ function CollapsibleCard({ items = [], emptyText, previewCount = 3, renderItem }
                 <p className="text-xs text-gray-400">{emptyText}</p>
             ) : (
                 <>
-                    {visible.map(renderItem)}
+                    {visible.map((item, index) => (
+                        <div key={item.id ?? item.paymentId ?? item.expenseId ?? index}>
+                            {renderItem(item, index, items)}
+                        </div>
+                    ))}
                     {items.length > previewCount && (
                         <button onClick={() => setExpanded(!expanded)}
                             className="text-xs font-medium text-sky-500 hover:text-sky-600 pt-1 w-full text-left">
@@ -111,51 +116,180 @@ function CollapsibleCard({ items = [], emptyText, previewCount = 3, renderItem }
 // 2. Select onChange={v => set(v?.value ?? fallback)} — extract string from object
 // 3. submit uses e?.preventDefault() — safe whether called from form submit or FormActions click
 
-function AddInhouseRentalForm({ equipment, loading, onClose, onSubmit }) {
-    const [rows, setRows] = useState([{ equipmentId: '', itemName: '', daysUsed: 1, unitCost: '' }]);
-    const equipmentOptions = equipment.map(e => ({ value: e.id, label: e.name || e.itemName }));
+function AddInhouseRentalForm({ equipment, equipmentBookedDates = {}, jobDateStart, jobDateEnd, loading, onClose, onSubmit }) {
+    const [selections, setSelections] = useState({});
+    const [unitCosts, setUnitCosts] = useState({}); // overridden cost per equipment
 
-    const update = (i, k, v) => setRows(r => r.map((row, idx) => idx === i ? { ...row, [k]: v } : row));
+    const jobDates = useMemo(() => {
+        if (!jobDateStart || !jobDateEnd) return [];
+        const dates = [];
+        let cur = new Date(jobDateStart);
+        const end = new Date(jobDateEnd);
+        while (cur <= end) {
+            dates.push(cur.toISOString().slice(0, 10));
+            cur = new Date(cur);
+            cur.setDate(cur.getDate() + 1);
+        }
+        return dates;
+    }, [jobDateStart, jobDateEnd]);
 
-    const handleEquipmentChange = (i, equipmentId) => {
-        const selected = equipment.find(e => String(e.id) === String(equipmentId));
-        setRows(r => r.map((row, idx) => idx === i ? {
-            ...row,
-            equipmentId,
-            itemName: selected?.name || selected?.itemName || '',
-        } : row));
+    const getUnitCost = (eq) => {
+        const id = String(eq.id);
+        return unitCosts[id] !== undefined ? unitCosts[id] : (eq.rentalPrice || eq.rental_price || 0);
     };
+
+    const toggleEquipment = (equipmentId) => {
+        const id = String(equipmentId);
+        const booked = equipmentBookedDates[id] || [];
+        const availableDates = jobDates.filter(d => !booked.includes(d));
+        const current = selections[id];
+        if (current && current.size > 0) {
+            setSelections(s => ({ ...s, [id]: new Set() }));
+        } else {
+            setSelections(s => ({ ...s, [id]: new Set(availableDates) }));
+        }
+    };
+
+    const toggleDay = (equipmentId, date) => {
+        const id = String(equipmentId);
+        setSelections(s => {
+            const current = new Set(s[id] || []);
+            if (current.has(date)) current.delete(date); else current.add(date);
+            return { ...s, [id]: current };
+        });
+    };
+
+    const hasSelections = Object.values(selections).some(s => s.size > 0);
 
     const submit = (e) => {
         e?.preventDefault();
-        const items = rows
-            .filter(r => r.equipmentId)
-            .map(r => ({ equipment_id: r.equipmentId, item_name: r.itemName, days_used: Number(r.daysUsed), unit_cost: Number(r.unitCost) }));
-        if (!items.length) return toast.error('Select at least one equipment item');
+        const items = equipment
+            .filter(eq => selections[String(eq.id)]?.size > 0)
+            .map(eq => {
+                const dates = [...selections[String(eq.id)]].sort();
+                const cost = Number(getUnitCost(eq));
+                return {
+                    equipment_id: eq.id,
+                    item_name: eq.name || eq.itemName,
+                    days_used: dates.length,
+                    unit_cost: cost,
+                    booked_dates: dates,
+                };
+            });
+        if (!items.length) return toast.error('Select at least one equipment and day');
         onSubmit({ items });
     };
 
     return (
         <form onSubmit={submit}>
             <div className="space-y-3">
-                {rows.map((row, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-2">
-                        <Select
-                            label="Equipment"
-                            value={row.equipmentId}
-                            onChange={e => handleEquipmentChange(i, e.target.value)}
-                            options={equipmentOptions}
-                        />
-                        <Input label="Days" type="number" min={1} value={row.daysUsed}
-                            onChange={e => update(i, 'daysUsed', e.target.value)} />
-                        <Input label="Cost/day" type="number" value={row.unitCost}
-                            onChange={e => update(i, 'unitCost', e.target.value)} />
-                    </div>
-                ))}
-                <button type="button"
-                    onClick={() => setRows(r => [...r, { equipmentId: '', itemName: '', daysUsed: 1, unitCost: '' }])}
-                    className="text-xs text-sky-500 hover:text-sky-400">+ Add row</button>
-                <FormActions loading={loading} onClose={onClose} onSubmit={submit} submitLabel="Add Rentals" />
+                {jobDates.length === 0 && (
+                    <p className="text-[10px] text-rose-400 italic">Job has no event dates set</p>
+                )}
+                {equipment.map(eq => {
+                    const id = String(eq.id);
+                    const booked = equipmentBookedDates[id] || [];
+                    const selectedDays = selections[id] || new Set();
+                    const isSelected = selectedDays.size > 0;
+                    const fullyBooked = jobDates.length > 0 && jobDates.every(d => booked.includes(d));
+                    const fixedCost = eq.unitCost || eq.pricePerUnit || 0;
+                    const currentCost = getUnitCost(eq);
+                    const isDiscounted = Number(currentCost) !== Number(fixedCost);
+                    const total = selectedDays.size * Number(currentCost);
+
+                    if (fullyBooked) return null;
+
+                    return (
+                        <div key={id} className={`border rounded-xl p-3 space-y-2 transition-colors ${isSelected ? 'border-sky-400 dark:border-sky-600 bg-sky-50/50 dark:bg-sky-900/10' : 'border-gray-100 dark:border-white/10'}`}>
+                            {/* Header row */}
+                            <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleEquipment(id)}>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${isSelected ? 'bg-sky-500 border-sky-500' : 'border-gray-300 dark:border-gray-600'}`}>
+                                        {isSelected && <span className="text-white text-[8px]">✓</span>}
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">{eq.name || eq.itemName}</p>
+                                        {eq.category && <p className="text-[10px] text-gray-400">{eq.category}</p>}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-mono text-gray-400 line-through">{fmtCurrency(fixedCost)}/day</p>
+                                    <p className={`text-xs font-mono font-semibold ${isDiscounted ? 'text-green-500' : 'text-sky-500'}`}>
+                                        {fmtCurrency(currentCost)}/day
+                                        {isDiscounted && <span className="text-[9px] ml-1">discounted</span>}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Cost override — only show when selected */}
+                            {isSelected && (
+                                <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-lg px-2 py-1.5" onClick={e => e.stopPropagation()}>
+                                    <span className="text-[10px] text-gray-400 shrink-0">Cost/day</span>
+                                    <span className="text-[10px] text-gray-300 line-through shrink-0">{fmtCurrency(fixedCost)}</span>
+                                    <input
+                                        type="number"
+                                        value={currentCost}
+                                        min={0}
+                                        onChange={e => setUnitCosts(s => ({ ...s, [id]: e.target.value }))}
+                                        className="flex-1 text-xs bg-transparent border-b border-sky-300 dark:border-sky-700 outline-none text-sky-600 dark:text-sky-400 font-mono text-right py-0.5"
+                                        placeholder={String(fixedCost)}
+                                    />
+                                    {isDiscounted && (
+                                        <button type="button" onClick={() => setUnitCosts(s => { const n = { ...s }; delete n[id]; return n; })}
+                                            className="text-[9px] text-gray-400 hover:text-rose-400">reset</button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Day chips */}
+                            {isSelected && jobDates.length > 0 && (
+                                <div className="flex flex-wrap gap-1 pt-1" onClick={e => e.stopPropagation()}>
+                                    {jobDates.map(date => {
+                                        const isBooked = booked.includes(date);
+                                        const isDaySelected = selectedDays.has(date);
+                                        const shortLabel = new Date(date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short', day: 'numeric' });
+                                        return (
+                                            <button key={date} type="button" disabled={isBooked}
+                                                onClick={() => !isBooked && toggleDay(id, date)}
+                                                className={`text-[10px] px-2 py-1 rounded-lg border transition-colors
+                                                    ${isBooked ? 'line-through text-rose-300 border-rose-200 dark:border-rose-800 cursor-not-allowed bg-rose-50 dark:bg-rose-900/10' : ''}
+                                                    ${isDaySelected && !isBooked ? 'bg-sky-500 text-white border-sky-500 font-semibold' : ''}
+                                                    ${!isDaySelected && !isBooked ? 'text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:border-sky-400 hover:text-sky-500' : ''}
+                                                `}>
+                                                {shortLabel}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Total */}
+                            {isSelected && selectedDays.size > 0 && (
+                                <div className="flex justify-between items-center pt-1 border-t border-gray-100 dark:border-white/5">
+                                    <span className="text-[10px] text-gray-400">{selectedDays.size} day(s) × {fmtCurrency(currentCost)}</span>
+                                    <span className={`text-xs font-mono font-semibold ${isDiscounted ? 'text-green-500' : 'text-sky-500'}`}>{fmtCurrency(total)}</span>
+                                </div>
+                            )}
+
+                            {/* Legend */}
+                            {isSelected && booked.some(d => jobDates.includes(d)) && (
+                                <div className="flex gap-3 pt-0.5">
+                                    <span className="text-[9px] text-rose-400 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />Already booked</span>
+                                    <span className="text-[9px] text-sky-500 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />Selected</span>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+
+                {equipment.length > 0 && equipment.every(eq => {
+                    const booked = equipmentBookedDates[String(eq.id)] || [];
+                    return jobDates.length > 0 && jobDates.every(d => booked.includes(d));
+                }) && (
+                        <p className="text-[10px] text-rose-400 italic text-center py-2">All equipment is fully booked for this job's dates</p>
+                    )}
+
+                <FormActions loading={loading} onClose={onClose} onSubmit={submit} submitLabel="Assign Equipment" />
             </div>
         </form>
     );
@@ -187,33 +321,132 @@ function AddOutsourcedRentalForm({ loading, onClose, onSubmit }) {
     );
 }
 
-function AddCrewForm({ crewList, loading, onClose, onSubmit }) {
-    const [source, setSource] = useState('inhouse');
-    const [f, setF] = useState({ staffId: '', role: '', amountToPay: '', contractorName: '', agreedAmount: '', notes: '' });
+function DatePicker({ label, selectedDates, disabledDates = [], minDate, maxDate, onToggle }) {
+    const today = new Date();
+    const [viewYear, setViewYear] = useState(today.getFullYear());
+    const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+    // On mount, jump to the job's start month if provided
+    useState(() => {
+        if (minDate) {
+            const d = new Date(minDate);
+            setViewYear(d.getFullYear());
+            setViewMonth(d.getMonth());
+        }
+    });
+
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const monthLabel = new Date(viewYear, viewMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    const fmt = (d) => {
+        const dd = String(d).padStart(2, '0');
+        const mm = String(viewMonth + 1).padStart(2, '0');
+        return `${viewYear}-${mm}-${dd}`;
+    };
+
+    const prev = () => { if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); } else setViewMonth(m => m - 1); };
+    const next = () => { if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); } else setViewMonth(m => m + 1); };
+
+    return (
+        <div>
+            {label && <p className="text-[11px] text-gray-400 mb-1.5">{label}</p>}
+            {minDate && maxDate && (
+                <p className="text-[9px] text-gray-400 mb-1">
+                    {fmtDate(minDate)} → {fmtDate(maxDate)}
+                </p>
+            )}
+            <div className="border border-gray-100 dark:border-white/10 rounded-lg p-2">
+                <div className="flex justify-between items-center mb-2">
+                    <button type="button" onClick={prev} className="text-gray-400 hover:text-gray-600 px-1">‹</button>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{monthLabel}</span>
+                    <button type="button" onClick={next} className="text-gray-400 hover:text-gray-600 px-1">›</button>
+                </div>
+                <div className="grid grid-cols-7 gap-0.5">
+                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                        <div key={d} className="text-[9px] text-center text-gray-300 py-0.5">{d}</div>
+                    ))}
+                    {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const d = i + 1;
+                        const dateStr = fmt(d);
+                        const isSelected = selectedDates.includes(dateStr);
+                        const isDisabled = disabledDates.includes(dateStr);
+                        const outOfRange = (minDate && dateStr < minDate) || (maxDate && dateStr > maxDate);
+                        return (
+                            <button
+                                key={d}
+                                type="button"
+                                disabled={isDisabled || outOfRange}
+                                onClick={() => onToggle(dateStr)}
+                                className={`text-[10px] rounded py-1 text-center transition-colors
+                                    ${outOfRange ? 'text-gray-200 dark:text-gray-700 cursor-not-allowed' : ''}
+                                    ${isDisabled && !outOfRange ? 'text-rose-300 dark:text-rose-700 cursor-not-allowed line-through' : ''}
+                                    ${isSelected ? 'bg-sky-500 text-white font-semibold' : !isDisabled && !outOfRange ? 'text-gray-700 dark:text-gray-200 hover:bg-sky-50 dark:hover:bg-sky-900/20' : ''}
+                                `}
+                            >
+                                {d}
+                            </button>
+                        );
+                    })}
+                </div>
+                {selectedDates.length > 0 && (
+                    <p className="text-[9px] text-sky-500 mt-1.5 text-center">
+                        {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''} selected
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function AddCrewForm({ crewList, assignedCrewCodes = [], jobDateStart, jobDateEnd, loading, onClose, onSubmit, lockedSource }) {
+    const [source, setSource] = useState(lockedSource ?? 'inhouse');
+    const [f, setF] = useState({ staffId: '', role: '', amountToPay: '', contractorName: '', agreedAmount: '', notes: '', selectedDates: [] });
+
+    const toggleCrewDate = (date) => {
+        setF(p => {
+            const already = p.selectedDates.includes(date);
+            return {
+                ...p,
+                selectedDates: already
+                    ? p.selectedDates.filter(d => d !== date)
+                    : [...p.selectedDates, date].sort()
+            };
+        });
+    };
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
 
-    const crewOptions = crewList.map(c => ({ value: c.crewCode, label: c.name || c.staffName }));
+
+    const crewOptions = crewList
+        .filter(c => !assignedCrewCodes.includes(c.id))
+        .map(c => ({
+            value: c.crewCode,   // send crewCode as the value — this is what goes to the API
+            label: c.name || c.staffName
+        }));
 
     const submit = (e) => {
         e?.preventDefault();
         if (source === 'inhouse') {
             if (!f.staffId || !f.amountToPay) return toast.error('Select staff and amount');
-            onSubmit({ crew_type: 'inhouse', crew_code: f.staffId, role: f.role, amountToPay: Number(f.amountToPay) });
+            onSubmit({ crew_type: 'inhouse', crew_code: f.staffId, role: f.role, amountToPay: Number(f.amountToPay), work_dates: f.selectedDates });
         } else {
             if (!f.contractorName || !f.agreedAmount) return toast.error('Fill contractor details');
-            onSubmit({ crew_type: 'outsourced', contractorName: f.contractorName, role: f.role, agreedAmount: Number(f.agreedAmount), notes: f.notes });
+            onSubmit({ crew_type: 'outsourced', contractorName: f.contractorName, role: f.role, agreedAmount: Number(f.agreedAmount), notes: f.notes, work_dates: f.selectedDates });
         }
     };
 
     return (
         <form onSubmit={submit}>
             <div className="space-y-3">
-                <Select
-                    label="Source"
-                    value={source}                          // ✅ raw string
-                    onChange={e => setSource(e.target.value)}  // ✅ e not v
-                    options={SOURCE_OPTS}
-                />
+                {!lockedSource && (
+                    <Select
+                        label="Source"
+                        value={source}
+                        onChange={e => setSource(e.target.value)}
+                        options={SOURCE_OPTS}
+                    />
+                )}
                 {source === 'inhouse' ? (
                     <FormRow>
                         <Select
@@ -224,6 +457,14 @@ function AddCrewForm({ crewList, loading, onClose, onSubmit }) {
                         />
                         <Input label="Role" value={f.role} onChange={e => set('role', e.target.value)} />
                         <Input label="Amount to pay" type="number" value={f.amountToPay} onChange={e => set('amountToPay', e.target.value)} />
+                        <DatePicker
+                            label="Work dates (optional)"
+                            selectedDates={f.selectedDates}
+                            disabledDates={[]} // staff can work multiple jobs — no blocking
+                            minDate={jobDateStart}
+                            maxDate={jobDateEnd}
+                            onToggle={toggleCrewDate}
+                        />
                     </FormRow>
                 ) : (
                     <FormRow>
@@ -347,6 +588,8 @@ export default function JobDetailPage({
     const jobId = jobProp?.id;
     //console.log(jobId);
     const [modal, setModal] = useState(null);
+
+    const { setOpen } = useMobileMenu();
 
     const { data: rentals = {} } = useQuery({
         queryKey: ['job-rentals', jobId],
@@ -539,8 +782,21 @@ export default function JobDetailPage({
 
     const job = jobProp || {};
     const inhouseRentals = rentals.inhouse || [];
+
+    const equipmentBookedDates = useMemo(() => {
+        const map = {};
+        for (const item of inhouseRentals) {
+            const id = String(item.equipmentId);
+            const dates = item.rentalDates?.map(r => r.bookedDate) || [];
+            map[id] = [...(map[id] || []), ...dates];
+        }
+        return map;
+    }, [inhouseRentals]);
+
     const outsourcedRentals = rentals.outsourced || [];
     const inhouseCrew = crewData.inhouse || [];
+
+
     const outsourcedCrew = crewData.outsourced || [];
     const totalPaid = payments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
     const outstanding = (parseFloat(job.quotedPrice) || 0) - totalPaid;
@@ -549,6 +805,12 @@ export default function JobDetailPage({
         <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-950 overflow-y-auto">
 
             <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-white/10 px-4 py-3 flex items-center gap-3">
+                <button
+                    onClick={() => setOpen(true)}
+                    className="md:hidden w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+                >
+                    <Menu size={16} />
+                </button>
                 <button onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5">
                     <ArrowLeft size={14} /> Back
                 </button>
@@ -631,12 +893,30 @@ export default function JobDetailPage({
                 </div>
 
                 <SubSectionHeader title="In-House Rentals" actionLabel="+ Add" onAction={() => setModal('inhouse-rental')} />
-                <CollapsibleCard items={inhouseRentals} emptyText="No in-house rental items added yet." renderItem={(item) => (
-                    <CostRow key={item.id} primary={item.itemName || item.item_name}
-                        secondary={`${item.daysUsed || item.days_used} day(s) · ${fmtCurrency(item.unitCost || item.unit_cost)}/day`}
-                        amount={parseFloat(item.totalCost || item.total_cost)} amountClass="text-emerald-600"
-                        onDelete={() => delInhouseRental.mutate(item.id)} loading={delInhouseRental.isPending} />
-                )} />
+                <CollapsibleCard items={inhouseRentals} emptyText="No in-house rental items added yet." renderItem={(p, i, arr) => (
+                    <>
+                        {i === 0 && (
+                            <>
+                                <div className="flex justify-between items-center py-2">
+                                    <span className="text-xs text-gray-400">Total paid</span>
+                                    <span className="font-mono text-xs font-semibold text-green-600">
+                                        {fmtCurrency(arr.reduce((s, x) => s + parseFloat(x.totalCost || 0), 0))}
+                                    </span>
+                                </div>
+                                <Divider />
+                            </>
+                        )}
+                        <CostRow
+                            primary={p.itemName}
+                            secondary={`${fmtCurrency(p.unitCost)} × ${p.daysUsed} day(s)${p.rentalDates?.length ? ' · ' + p.rentalDates.map(r => fmtDate(r.bookedDate)).join(', ') : ''}`}
+                            amount={p.totalCost}
+                            amountClass="text-green-600"
+                            onDelete={() => delInhouseRental.mutate(p.id)}
+                            loading={delPayment.isPending}
+                        />
+                    </>
+                )}
+                />
 
                 <SubSectionHeader title="Outsourced Rentals" actionLabel="+ Add" onAction={() => setModal('outsourced-rental')} />
                 <CollapsibleCard items={outsourcedRentals} emptyText="No outsourced rental items added yet." renderItem={(item) => (
@@ -646,7 +926,7 @@ export default function JobDetailPage({
                         onDelete={() => delOutsourcedRental.mutate(item.id)} loading={delOutsourcedRental.isPending} />
                 )} />
 
-                <SubSectionHeader title="Inhouse Staff" actionLabel="+ Assign" onAction={() => setModal('crew')} />
+                <SubSectionHeader title="Inhouse Staff" actionLabel="+ Assign" onAction={() => setModal('crew-inhouse')} />
                 <CollapsibleCard items={inhouseCrew} emptyText="No inhouse staff assigned yet." renderItem={(c) => (
                     <CostRow key={c.id} primary={c.staffName || c.name}
                         secondary={`${c.role || '—'} · paid: ${fmtCurrency(c.amountPaid || 0)} · outstanding: ${fmtCurrency(c.amountOutstanding || 0)}`}
@@ -654,7 +934,7 @@ export default function JobDetailPage({
                         onDelete={() => delInhouseCrew.mutate(c.id)} loading={delInhouseCrew.isPending} />
                 )} />
 
-                <SubSectionHeader title="Outsourced Contractors" actionLabel="+ Add" onAction={() => setModal('crew')} />
+                <SubSectionHeader title="Outsourced Contractors" actionLabel="+ Add" onAction={() => setModal('crew-outsourced')} />
                 <CollapsibleCard items={outsourcedCrew} emptyText="No contractors assigned yet." renderItem={(c) => (
                     <CostRow key={c.id} primary={c.contractorName || c.staffName}
                         secondary={`${c.role || '—'} · outstanding: ${fmtCurrency(c.amountOutstanding || 0)}`}
@@ -700,13 +980,42 @@ export default function JobDetailPage({
             </div>
 
             <Modal title="Add In-House Rentals" open={modal === 'inhouse-rental'} onClose={() => setModal(null)} width="max-w-lg">
-                <AddInhouseRentalForm equipment={equipment} loading={addInhouseRental.isPending} onClose={() => setModal(null)} onSubmit={d => addInhouseRental.mutate(d)} />
+                <AddInhouseRentalForm
+                    equipment={equipment}
+                    equipmentBookedDates={equipmentBookedDates}
+                    jobDateStart={job.eventDateStart}
+                    jobDateEnd={job.eventDateEnd}
+                    loading={addInhouseRental.isPending}
+                    onClose={() => setModal(null)}
+                    onSubmit={d => addInhouseRental.mutate(d)}
+                />
             </Modal>
             <Modal title="Add Outsourced Rental" open={modal === 'outsourced-rental'} onClose={() => setModal(null)}>
                 <AddOutsourcedRentalForm loading={addOutsourcedRental.isPending} onClose={() => setModal(null)} onSubmit={d => addOutsourcedRental.mutate(d)} />
             </Modal>
-            <Modal title="Assign Crew" open={modal === 'crew'} onClose={() => setModal(null)}>
-                <AddCrewForm crewList={crewList} loading={addCrew.isPending} onClose={() => setModal(null)} onSubmit={d => addCrew.mutate(d)} />
+            <Modal title="Assign Inhouse Staff" open={modal === 'crew-inhouse'} onClose={() => setModal(null)}>
+                <AddCrewForm
+                    crewList={crewList}
+                    assignedCrewCodes={inhouseCrew.map(c => c.crewId).filter(Boolean)}
+                    jobDateStart={job.eventDateStart}
+                    jobDateEnd={job.eventDateEnd}
+                    loading={addCrew.isPending}
+                    onClose={() => setModal(null)}
+                    onSubmit={d => addCrew.mutate(d)}
+                    lockedSource="inhouse"
+                />
+            </Modal>
+            <Modal title="Add Outsourced Contractor" open={modal === 'crew-outsourced'} onClose={() => setModal(null)}>
+                <AddCrewForm
+                    crewList={crewList}
+                    assignedCrewCodes={inhouseCrew.map(c => c.crewCode || c.staffCode || String(c.id)).filter(Boolean)}
+                    jobDateStart={job.eventDateStart}
+                    jobDateEnd={job.eventDateEnd}
+                    loading={addCrew.isPending}
+                    onClose={() => setModal(null)}
+                    onSubmit={d => addCrew.mutate(d)}
+                    lockedSource="outsourced"
+                />
             </Modal>
             <Modal title="Add Purchase Item" open={modal === 'purchase'} onClose={() => setModal(null)}>
                 <AddPurchaseForm loading={addPurchase.isPending} onClose={() => setModal(null)} onSubmit={d => addPurchase.mutate(d)} />

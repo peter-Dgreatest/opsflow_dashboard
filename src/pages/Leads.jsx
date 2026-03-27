@@ -8,6 +8,7 @@ import { fmtCompact, fmtDate } from '../utils/format';
 import { leadsApi, customersApi } from '../api/endpoints';
 import { Plus, TrendingUp, DollarSign, CheckCircle, Clock, Pencil, Trash2 } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 
 const STATUS_OPTS = ['open', 'follow_up', 'client_ghosted', 'budget_too_high', 'client_not_serious', 'unreachable', 'declined', 'converted', 'closed']
@@ -287,9 +288,10 @@ export default function LeadsPage() {
     },
   ];
 
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Leads" subtitle="Prospective clients & tentative jobs"
+      <Topbar title="Leads" subtitle="Prospective clients & tentative jobs" onMenuClick={() => setOpen(true)}
         actions={
           <button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5">
             <Plus size={13} />Add Lead

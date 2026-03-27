@@ -9,6 +9,8 @@ import { jobsApi, customersApi } from '../api/endpoints';
 import { Plus, Briefcase, DollarSign, TrendingUp, CheckCircle, Pencil, Trash2 } from 'lucide-react';
 import JobDetailPage from './JobDetailPage'; // ← import the detail page
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
+
 const STATUS_OPTS = ['planned', 'confirmed', 'in_progress', 'completed', 'cancelled'].map(v => ({ value: v, label: v.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }));
 const normalize = (d) => d?.data || d || [];
 
@@ -65,6 +67,7 @@ export default function JobsPage() {
   const [deleting, setDeleting] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null); // ← track selected job for detail view
 
+  const { setOpen } = useMobileMenu();
   const { data: jobsRaw = [], isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: () => jobsApi.list(),
@@ -180,7 +183,7 @@ export default function JobsPage() {
 
   return (
     <>
-      <Topbar title="Jobs" subtitle="All projects & events"
+      <Topbar title="Jobs" subtitle="All projects & events" onMenuClick={() => setOpen(true)}
         actions={<button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5"><Plus size={13} />New Job</button>} />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

@@ -11,7 +11,7 @@ import axios from 'axios';
 
 // src/api/client.js — add one header to every web request
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: '/api',//'https://easisales.com/profitnko1/api', //
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

@@ -1,8 +1,9 @@
-import { AuthProvider } from './hooks/useAuth';
+import { useState } from 'react';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
+import { MobileMenuContext } from './hooks/useMobileMenu';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/layout';
-import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
@@ -19,6 +20,7 @@ import Settings from './pages/Settings';
 
 function AppShell() {
   const { user, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) {
     return (
@@ -34,27 +36,32 @@ function AppShell() {
   if (!user) return <LoginPage />;
 
   return (
-    <div className="flex h-screen bg-bg overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/leads" element={<Leads />} />
-          <Route path="/customers" element={<Customers />} />
-          <Route path="/crew" element={<Crew />} />
-          <Route path="/equipment" element={<Equipment />} />
-          <Route path="/vendors" element={<Vendors />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/reminders" element={<Reminders />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </main>
-    </div>
+    <MobileMenuContext.Provider value={{ open: mobileMenuOpen, setOpen: setMobileMenuOpen }}>
+      <div className="flex h-screen bg-bg overflow-hidden">
+        <Sidebar
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/crew" element={<Crew />} />
+            <Route path="/equipment" element={<Equipment />} />
+            <Route path="/vendors" element={<Vendors />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/reminders" element={<Reminders />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </MobileMenuContext.Provider>
   );
 }
 
@@ -62,7 +69,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || '/'}>
           <AppShell />
         </BrowserRouter>
       </AuthProvider>

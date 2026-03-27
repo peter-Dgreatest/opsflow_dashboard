@@ -6,6 +6,7 @@ import { authApi } from '../api/endpoints';
 import { Topbar } from '../components/layout';
 import { useAuth } from '../hooks/useAuth';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 import { Save, Shield } from 'lucide-react';
 
 const InputField = ({ label, value, onChange, type = 'text', placeholder, disabled }) => (
@@ -89,9 +90,10 @@ export default function SettingsPage() {
     passwordMut.mutate({ currentPassword: passwords.current, newPassword: passwords.newPass });
   };
 
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Settings" subtitle="Account & preferences" />
+      <Topbar title="Settings" subtitle="Account & preferences" onMenuClick={() => setOpen(true)} />
       <div className="flex-1 overflow-y-auto p-5">
         <Tabs tabs={[
           { key: 'profile', label: 'Profile' },

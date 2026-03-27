@@ -9,6 +9,7 @@ import { expensesApi, jobsApi } from '../api/endpoints';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Plus, Receipt, DollarSign, Tag, Trash2, Pencil } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const TAG_OPTS = ['crew', 'equipment', 'third_party', 'misc'].map(v => ({ value: v, label: v.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }));
 const EMPTY = { jobId: '', purpose: '', tag: 'misc', amount: '', dateMade: '', notes: '' };
@@ -94,9 +95,10 @@ export default function ExpensesPage() {
     },
   ];
 
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Expenses" subtitle="Operational spending"
+      <Topbar title="Expenses" subtitle="Operational spending" onMenuClick={() => setOpen(true)}
         actions={<button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5"><Plus size={13} />Log Expense</button>} />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

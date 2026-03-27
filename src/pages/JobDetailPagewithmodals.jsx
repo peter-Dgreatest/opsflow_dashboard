@@ -8,6 +8,7 @@ import { StatusBadge } from '../components/ui';
 import { fmt, fmtCompact, fmtDate } from '../utils/format';
 import { ArrowLeft, Pencil, Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const nr = d => d?.data || d;
 

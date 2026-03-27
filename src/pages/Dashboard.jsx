@@ -6,9 +6,11 @@ import {
 import { KpiCard, Card, StatusBadge } from '../components/ui';
 import { Topbar } from '../components/layout';
 import { fmt, fmtCompact, fmtDateShort } from '../utils/format';
-import { dashboardApi, reportsApi, jobsApi, paymentsApi, remindersApi } from '../api/endpoints';
+import { dashboardApi } from '../api/endpoints';
 import { useState } from 'react';
 import { DollarSign, Briefcase, Clock, AlertCircle, TrendingUp } from 'lucide-react';
+
+import { useMobileMenu } from '../hooks/useMobileMenu';
 
 const CHART_COLORS = { revenue: '#a3e635', profit: '#34d399', expenses: '#fb7185' };
 const PIE_COLORS = ['#34d399', '#38bdf8', '#a78bfa', '#fb923c', '#fb7185'];
@@ -31,7 +33,7 @@ const ChartTip = ({ active, payload, label }) => {
   );
 };
 
-const normalize = (d) => d?.data || d || [];
+//const normalize = (d) => d?.data || d || [];
 
 export default function DashboardPage() {
   const [chartKey, setChartKey] = useState('revenue');
@@ -83,7 +85,7 @@ export default function DashboardPage() {
   const statusCounts = Object.entries(jobsByStatus)
     .filter(([, v]) => v > 0)
     .map(([name, value]) => ({ name, value }));
-  const monthlyStats = kpi?.financials?.monthly || {};
+  //const monthlyStats = kpi?.financials?.monthly || {};
   // const monthly = monthlyStats.revenue != null ? [
   //   {
   //     month: 'This Month',
@@ -100,23 +102,33 @@ export default function DashboardPage() {
   let totalRevenue = kpi?.financials?.yearly?.revenue || 0;
 
   let avg = (totalProfit / totalRevenue) * 100;
-
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Dashboard" subtitle="Business overview" />
+      <Topbar title="Dashboard" subtitle="Business overview" onMenuClick={() => setOpen(true)} />
       <div className="flex-1 overflow-y-auto p-5">
 
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-          <KpiCard label="Total Revenue" value={fmtCompact(totalRevenue || 0)} change={kpi.revenueChange} accent="lime" icon={DollarSign} />
-          <KpiCard label="Net Profit" value={fmtCompact(totalProfit || 0)} change={kpi.profitChange} accent="green" icon={TrendingUp} />
-          <KpiCard label="Outstanding" value={fmtCompact(kpi?.financials?.outstanding?.total || 0)} change={kpi.outstandingChange} accent="coral" icon={AlertCircle} />
-          <KpiCard label="Jobs This Month" value={kpi?.jobs?.recent.length || 0} change={kpi.jobsChange} accent="sky" icon={Briefcase} />
+          {[
+            { label: 'Total Revenue', value: fmtCompact(totalRevenue || 0), change: kpi.revenueChange, accent: 'lime', icon: DollarSign },
+            { label: 'Net Profit', value: fmtCompact(totalProfit || 0), change: kpi.profitChange, accent: 'green', icon: TrendingUp },
+            { label: 'Outstanding', value: fmtCompact(kpi?.financials?.outstanding?.total || 0), change: kpi.outstandingChange, accent: 'coral', icon: AlertCircle },
+            { label: 'Jobs This Month', value: kpi?.jobs?.recent?.length || 0, change: kpi.jobsChange, accent: 'sky', icon: Briefcase },
+          ].map(({ label, value, change, accent, icon }) => (
+            <KpiCard key={label} label={label} value={value} change={change} accent={accent} icon={icon} />
+          ))}
         </div>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-          <KpiCard label="Avg Margin" value={`${(avg || 0).toFixed(1)}%`} accent="violet" />
-          <KpiCard label="Total Jobs" value={kpi?.jobs?.total || 0} accent="orange" />
-          <KpiCard label="Reminders" value={kpi?.alerts?.reminders?.length || activeReminders?.length} accent="yellow" />
-          <KpiCard label="Customers" value={kpi?.customers?.total || 0} accent="emerald" />
+          {[
+            { label: 'Avg Margin', value: `${(avg || 0).toFixed(1)}%`, accent: 'violet' },
+            { label: 'Total Jobs', value: kpi?.jobs?.total || 0, accent: 'orange' },
+            { label: 'Reminders', value: kpi?.alerts?.reminders?.length || 0, accent: 'yellow' },
+            { label: 'Customers', value: kpi?.customers?.total || 0, accent: 'emerald' },
+          ].map(({ label, value, accent }) => (
+            <KpiCard key={label} label={label} value={value} accent={accent} />
+          ))}
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-4">

@@ -8,6 +8,8 @@ import { fmtCompact, fmt, fmtDate } from '../utils/format';
 import { crewApi, crewPaymentsApi, jobsApi } from '../api/endpoints';
 import { Plus, UserCheck, DollarSign, Briefcase, Award, Pencil, Trash2 } from 'lucide-react';
 
+
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const CREW_EMPTY = { name: '', role: '', skills: '', phone: '', email: '', rate: '', notes: '' };
 const PAY_EMPTY = { crewId: '', jobId: '', amount: '', method: 'cash', datePaid: '', notes: '' };
@@ -140,9 +142,11 @@ export default function CrewPage() {
     },
   ];
 
+
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Crew" subtitle="Team management & payments"
+      <Topbar title="Crew" subtitle="Team management & payments" onMenuClick={() => setOpen(true)}
         actions={
           <div className="flex gap-2">
             <button onClick={() => setModal('addPayment')} className="btn-ghost flex items-center gap-1.5 text-xs"><Plus size={12} />Record Payment</button>

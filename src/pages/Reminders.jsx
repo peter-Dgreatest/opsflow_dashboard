@@ -8,6 +8,7 @@ import { fmt, fmtDate } from '../utils/format';
 import { remindersApi, jobsApi } from '../api/endpoints';
 import { Plus, Bell, AlertCircle, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
 
+import { useMobileMenu } from '../hooks/useMobileMenu';
 const normalize = d => d?.data || d || [];
 const TYPE_OPTS = ['client_payment', 'crew_payment', 'third_party_payment', 'prospective_job', 'other'].map(v => ({ value: v, label: v.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }));
 const TAG_OPTS = ['partial_payment', 'overdue', 'follow_up', 'prospective_job', 'other'].map(v => ({ value: v, label: v.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }));
@@ -111,9 +112,11 @@ export default function RemindersPage() {
     },
   ];
 
+
+  const { setOpen } = useMobileMenu();
   return (
     <>
-      <Topbar title="Reminders" subtitle="Payment & follow-up alerts"
+      <Topbar title="Reminders" subtitle="Payment & follow-up alerts" onMenuClick={() => setOpen(true)}
         actions={<button onClick={() => setModal('create')} className="btn-primary flex items-center gap-1.5"><Plus size={13} />Add Reminder</button>} />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
