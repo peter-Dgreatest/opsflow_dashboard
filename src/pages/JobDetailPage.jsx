@@ -827,7 +827,7 @@ export default function JobDetailPage({
                     <div className="flex justify-between items-start mb-3">
                         <div className="flex flex-col gap-1">
                             <p className="text-[11px] text-gray-400">Customer</p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{job.customerCode ?? '—'}</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{job.customer.fullName ?? '—'}</p>
                         </div>
                         <div className="text-right">
                             <p className="text-[11px] text-gray-400">Quoted price</p>

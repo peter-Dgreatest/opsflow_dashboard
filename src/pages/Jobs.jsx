@@ -121,6 +121,7 @@ export default function JobsPage() {
 
   const jobs = jobsRaw;
   const filtered = tab === 'all' ? jobs : jobs.filter(j => j.jobStatus === tab);
+  //console.log(filtered);
   const totalRev = jobs.reduce((s, j) => s + (parseFloat(j.totalRevenue) || 0), 0);
   const totalProfit = jobs.reduce((s, j) => s + (parseFloat(j.jobProfit) || 0), 0);
   const completed = jobs.filter(j => j.jobStatus === 'completed').length;
@@ -131,8 +132,8 @@ export default function JobsPage() {
       label: 'Job', accessor: 'jobTitle', sortable: true,
       render: r => (
         <div>
-          <p className="font-medium text-xs">{r.jobTitle}</p>
-          <p className="text-[10px] text-muted">{r.customerCode}</p>
+          <p className="font-medium text-xs truncate max-w-[160px]">{r.jobTitle}</p>
+          <p className="text-[10px] text-muted truncate max-w-[160px]">{r.customer.fullName || r.customerCode}</p>
         </div>
       )
     },
@@ -144,11 +145,11 @@ export default function JobsPage() {
       render: r => r.quotedPrice ? fmtCompact(r.quotedPrice) : '—'
     },
     {
-      label: 'Revenue', accessor: 'totalRevenue', sortable: true,
+      label: 'Revenue', mobileHide: true, accessor: 'totalRevenue', sortable: true,
       render: r => <span className="font-mono text-green-400">{r.totalRevenue > 0 ? fmtCompact(r.totalRevenue) : '—'}</span>
     },
     {
-      label: 'Expenses', accessor: 'totalExpenses', sortable: true,
+      label: 'Expenses', mobileHide: true, accessor: 'totalExpenses', sortable: true,
       render: r => <span className="font-mono text-rose-400">{r.totalExpenses > 0 ? fmtCompact(r.totalExpenses) : '—'}</span>
     },
     {

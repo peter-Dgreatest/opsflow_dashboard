@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -8,9 +9,22 @@ import { Topbar } from '../components/layout';
 import { fmt, fmtCompact, fmtDateShort } from '../utils/format';
 import { dashboardApi } from '../api/endpoints';
 import { useState } from 'react';
-import { DollarSign, Briefcase, Clock, AlertCircle, TrendingUp } from 'lucide-react';
+import { DollarSign, Briefcase, Clock, AlertCircle, TrendingUp, Users, CreditCard, Receipt, HardDrive, Truck, Bell, BarChart2, Settings, ArrowRight } from 'lucide-react';
 
 import { useMobileMenu } from '../hooks/useMobileMenu';
+
+// Quick navigation modules
+const QUICK_MODULES = [
+  { icon: Users, label: 'Customers', path: '/customers', color: '#a78bfa' },
+  { icon: Briefcase, label: 'Jobs', path: '/jobs', color: '#38bdf8' },
+  { icon: TrendingUp, label: 'Leads', path: '/leads', color: '#38bdf8' },
+  { icon: CreditCard, label: 'Payments', path: '/payments', color: '#4ade80' },
+  { icon: Receipt, label: 'Expenses', path: '/expenses', color: '#facc15' },
+  { icon: HardDrive, label: 'Equipment', path: '/equipment', color: '#34d399' },
+  { icon: Bell, label: 'Reminders', path: '/reminders', color: '#fb7185' },
+  { icon: BarChart2, label: 'Reports', path: '/reports', color: '#e879f9' },
+  { icon: Settings, label: 'Settings', path: '/settings', color: '#6b7280' },
+];
 
 const CHART_COLORS = { revenue: '#a3e635', profit: '#34d399', expenses: '#fb7185' };
 const PIE_COLORS = ['#34d399', '#38bdf8', '#a78bfa', '#fb923c', '#fb7185'];
@@ -131,8 +145,35 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <Card className="col-span-2" title="Financial Performance"
+        {/* Quick Navigation */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-text">Quick Navigation</h3>
+            <Link to="/help" className="text-xs text-lime-500 hover:text-lime-400 flex items-center gap-1">
+              View All <ArrowRight size={12} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
+            {QUICK_MODULES.map(mod => (
+              <Link
+                key={mod.path}
+                to={mod.path}
+                className="flex flex-col items-center p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-border/30 hover:border-border transition-all group"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110"
+                  style={{ background: `${mod.color}15` }}
+                >
+                  <mod.icon size={14} style={{ color: mod.color }} />
+                </div>
+                <p className="text-[10px] text-muted group-hover:text-text text-center">{mod.label}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <Card className="lg:col-span-2" title="Financial Performance"
             actions={
               <div className="flex gap-1 bg-input rounded-lg p-1">
                 {['revenue', 'profit', 'expenses'].map(k => (
@@ -191,7 +232,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card title="Upcoming Jobs">
             {upcomingJobs.length === 0
               ? <p className="text-xs text-muted py-8 text-center">No upcoming jobs</p>

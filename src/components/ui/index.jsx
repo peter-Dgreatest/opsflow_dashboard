@@ -16,7 +16,7 @@ export function KpiCard({ label, value, change, changeLabel, accent = 'lime', ic
         <p className="text-xs text-muted uppercase tracking-widest font-semibold">{label}</p>
         {Icon && <div className="w-7 h-7 rounded-md bg-white/5 flex items-center justify-center"><Icon size={14} className="text-muted" /></div>}
       </div>
-      <p className="text-2xl font-semibold font-mono tracking-tight leading-none mb-2">{value}</p>
+      <p className="text-lg sm:text-xl font-bold font-mono truncate leading-tight">{value}</p>
       {change !== undefined && (
         <div className="flex items-center gap-1.5">
           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 ${isUp ? 'bg-green-400/10 text-green-400' : 'bg-rose-400/10 text-rose-400'}`}>
@@ -86,13 +86,13 @@ export function DataTable({ columns, data, searchable = true, pageSize = 10, emp
             placeholder="Search…" className="bg-transparent outline-none text-xs text-text w-full placeholder:text-muted" />
         </div>
       )}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <table className="min-w-full">
           <thead>
             <tr>
               {columns.map(col => (
                 <th key={col.key || col.accessor || col.label}
-                  className={`text-left text-[10px] font-semibold text-muted uppercase tracking-widest px-3 py-2.5 border-b border-border whitespace-nowrap ${col.sortable ? 'cursor-pointer hover:text-text' : ''}`}
+                  className={`text-left text-[10px] font-semibold text-muted uppercase tracking-widest px-3 py-2.5 border-b border-border ${col.mobileHide ? 'hidden sm:table-cell' : ''} whitespace-nowrap ${col.sortable ? 'cursor-pointer hover:text-text' : ''}`}
                   onClick={() => col.sortable && toggleSort(col.accessor)}>
                   <span className="flex items-center gap-1">
                     {col.label}
@@ -110,7 +110,7 @@ export function DataTable({ columns, data, searchable = true, pageSize = 10, emp
             ) : slice.map((row, i) => (
               <tr key={i} onClick={() => onRowClick?.(row)} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
                 {columns.map(col => (
-                  <td key={col.key || col.accessor || col.label} className="px-3 py-3 text-xs text-text whitespace-nowrap">
+                  <td key={col.key || col.accessor || col.label} className={`px-3 py-3 text-xs text-text whitespace-nowrap ${col.mobileHide ? 'hidden sm:table-cell' : ''}`}>
                     {col.render ? col.render(row) : row[col.accessor] ?? '—'}
                   </td>
                 ))}

@@ -34,51 +34,79 @@ const LEAD_EMPTY = {
 };
 
 // ── Add / Edit lead form ──────────────────────────────────────────────────────
-function LeadForm({ initial = LEAD_EMPTY, onSubmit, onClose, loading }) {
+function LeadForm({ initial = LEAD_EMPTY, onSubmit, onClose, loading, customers = [] }) {
   const [form, setForm] = useState({ ...LEAD_EMPTY, ...initial });
+  const [useExisting, setUseExisting] = useState(!!initial.customerCode);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const custOpts = customers.map(c => ({ value: c.customerCode, label: c.fullName }));
 
   const handle = (e) => {
     e.preventDefault();
-    const name = form.prospectiveClientName || form.customer?.fullName;
-    if (!name) return toast.error('Client name required');
+    const name = form.prospectiveClientName || form.customerCode;
+    if (!name) return toast.error('Client name or customer required');
     onSubmit(form);
   };
 
   return (
     <form onSubmit={handle}>
-      <FormRow>
-        <Input label="Client Name" required
-          value={form.prospectiveClientName}
-          onChange={e => set('prospectiveClientName', e.target.value)} />
-        <Input label="Phone"
-          value={form.prospectiveClientPhone || ''}
-          onChange={e => set('prospectiveClientPhone', e.target.value)} />
-      </FormRow>
-      <FormRow>
+      {/* Toggle: existing customer vs new prospect */}
+      <div className="flex gap-2 mb-4">
+        <button type="button"
+          onClick={() => { setUseExisting(false); set('customerCode', ''); }}
+          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${!useExisting ? 'bg-sky-400/10 border-sky-400/40 text-sky-400' : 'border-border/40 text-muted hover:text-text'}`}>
+          New prospect
+        </button>
+        <button type="button"
+          onClick={() => { setUseExisting(true); set('prospectiveClientName', ''); set('prospectiveClientPhone', ''); set('prospectiveClientEmail', ''); }}
+          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${useExisting ? 'bg-sky-400/10 border-sky-400/40 text-sky-400' : 'border-border/40 text-muted hover:text-text'}`}>
+          Existing customer
+        </button>
+      </div>
+
+      {useExisting ? (
+        <Select label="Customer" required options={custOpts} value={form.customerCode}
+          onChange={e => set('customerCode', e.target.value)} />
+      ) : (
+        <FormRow>
+          <Input label="Client Name" required
+            value={form.prospectiveClientName}
+            onChange={e => set('prospectiveClientName', e.target.value)} />
+          <Input label="Phone"
+            value={form.prospectiveClientPhone || ''}
+            onChange={e => set('prospectiveClientPhone', e.target.value)} />
+        </FormRow>
+      )}
+
+      {!useExisting && (
         <Input label="Email" type="email"
           value={form.prospectiveClientEmail || ''}
           onChange={e => set('prospectiveClientEmail', e.target.value)} />
+      )}
+
+      <FormRow>
         <Input label="Event Date Text"
           value={form.eventDateText || ''}
           onChange={e => set('eventDateText', e.target.value)}
           placeholder="e.g. April 2026" />
-      </FormRow>
-      <FormRow>
         <Input label="Event Start Date" type="date"
           value={form.eventDateStart || ''}
           onChange={e => set('eventDateStart', e.target.value)} />
-        <Input label="Estimated Cost (₦)" type="number"
-          value={form.estimatedCost || ''}
-          onChange={e => set('estimatedCost', e.target.value)} />
       </FormRow>
+
+      <Input label="Estimated Cost (₦)" type="number"
+        value={form.estimatedCost || ''}
+        onChange={e => set('estimatedCost', e.target.value)} />
+
       <Select label="Status" options={STATUS_OPTS} value={form.status}
         onChange={e => set('status', e.target.value)} />
+
       <Textarea label="Event Info" value={form.info || ''} rows={2}
         onChange={e => set('info', e.target.value)}
         placeholder="What equipment/services they need…" />
       <Textarea label="Notes" value={form.notes || ''} rows={2}
         onChange={e => set('notes', e.target.value)} />
+
       <FormActions onClose={onClose} loading={loading} />
     </form>
   );
@@ -308,7 +336,7 @@ export default function LeadsPage() {
         </div>
 
         {/* Stage funnel */}
-        <div className="grid grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           {[
             { label: 'Open', color: '#38bdf8', count: open.length },
             { label: 'Follow Up', color: '#fb923c', count: followUp.length },
@@ -340,8 +368,25 @@ export default function LeadsPage() {
 
       {/* Add lead */}
       <Modal title="Add Lead" open={modal === 'create'} onClose={() => setModal(null)}>
-        <LeadForm loading={createMut.isPending} onClose={() => setModal(null)}
-          onSubmit={d => createMut.mutate(d)} />
+        <LeadForm
+          customers={customers}         // ← add this
+          loading={createMut.isPending}
+          onClose={() => setModal(null)}
+          onSubmit={d => createMut.mutate(d)}
+        />
+      </Modal>
+
+      {/* Edit lead */}
+      <Modal title="Edit Lead" open={modal === 'edit'} onClose={() => { setModal(null); setEditing(null); }}>
+        {editing && (
+          <LeadForm
+            customers={customers}       // ← add this
+            initial={editing}
+            loading={updateMut.isPending}
+            onClose={() => { setModal(null); setEditing(null); }}
+            onSubmit={d => updateMut.mutate({ id: editing.id, data: d })}
+          />
+        )}
       </Modal>
 
       {/* Edit lead */}

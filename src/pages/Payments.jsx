@@ -116,7 +116,7 @@ export default function PaymentsPage() {
           <KpiCard label="Bank/Transfer" value={fmtCompact(payments.filter(p => ['bank', 'transfer'].includes(p.method)).reduce((s, p) => s + parseFloat(p.amount), 0))} accent="sky" icon={CreditCard} />
         </div>
         {/* Method breakdown */}
-        <div className="grid grid-cols-5 gap-2 mb-5">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
           {['cash', 'bank', 'transfer', 'pos', 'other'].map(m => {
             const t = payments.filter(p => p.method === m).reduce((s, p) => s + parseFloat(p.amount), 0);
             const c = payments.filter(p => p.method === m).length;

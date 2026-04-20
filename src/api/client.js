@@ -11,7 +11,7 @@ import axios from 'axios';
 
 // src/api/client.js — add one header to every web request
 const client = axios.create({
-  baseURL: '/api',//'https://easisales.com/profitnko1/api', //
+  baseURL: import.meta.env.VITE_API_URL || 'https://profitnko.com/profitnko1/api', //
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -19,6 +19,9 @@ const client = axios.create({
   },
   timeout: 15000,
 });
+
+let rrt = import.meta.env.VITE_API_URL || 'https://profitnko.com/profitnko1/api';
+console.log('rrt', rrt);
 
 // ── Silent refresh ────────────────────────────────────────────────────────────
 let isRefreshing = false;
