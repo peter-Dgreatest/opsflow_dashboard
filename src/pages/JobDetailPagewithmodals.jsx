@@ -528,11 +528,11 @@ export default function JobDetailPage({ job: jobProp, onBack, onNavigateToEditJo
 
         {/* ── Payment tiles ── */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="card p-3 border-t-2 border-t-green-400">
+          <div className="card p-3 brorder-t2 brorder-tgreen-400">
             <p className="text-[10px] text-muted mb-1">Total Paid</p>
             <p className="font-mono text-base font-bold text-green-400">{fmtCompact(totalPaid)}</p>
           </div>
-          <div className="card p-3 border-t-2 border-t-rose-400">
+          <div className="card p-3 brorder-t2 brorder-trose-400">
             <p className="text-[10px] text-muted mb-1">Outstanding</p>
             <p className={`font-mono text-base font-bold ${outstanding > 0 ? 'text-rose-400' : 'text-green-400'}`}>
               {fmtCompact(Math.max(0, outstanding))}

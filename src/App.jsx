@@ -28,7 +28,7 @@ function AppShell() {
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-lime-500 flex items-center justify-center text-white font-bold text-lg">O</div>
-          <div className="w-5 h-5 border-2 border-lime-500/30 border-t-lime-500 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-lime-500/30 brorder-tlime-500 rounded-full animate-spin" />
         </div>
       </div>
     );

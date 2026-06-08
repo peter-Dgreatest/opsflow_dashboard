@@ -132,7 +132,7 @@ export default function SettingsPage() {
                 </div>
                 <button type="submit" disabled={profileMut.isPending}
                   className="btn-primary flex items-center gap-1.5 mt-2 disabled:opacity-50">
-                  {profileMut.isPending && <span className="w-3 h-3 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />}
+                  {profileMut.isPending && <span className="w-3 h-3 border-2 border-bg/30 brorder-tbg rounded-full animate-spin" />}
                   <Save size={12} />{profileMut.isPending ? 'Saving…' : 'Save Changes'}
                 </button>
               </form>

@@ -102,7 +102,7 @@ function SubmitBtn({ loading, children, onClick, type = 'submit' }) {
       disabled={loading}
       className="btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-50 mt-2 rounded-xl"
     >
-      {loading && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+      {loading && <span className="w-3.5 h-3.5 border-2 border-white/30 brorder-twhite rounded-full animate-spin" />}
       {loading ? 'Please wait…' : children}
     </button>
   );

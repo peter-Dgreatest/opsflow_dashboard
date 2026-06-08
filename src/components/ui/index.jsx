@@ -5,13 +5,13 @@ import { Search, ChevronUp, ChevronDown } from 'lucide-react';
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 export function KpiCard({ label, value, change, changeLabel, accent = 'lime', icon: Icon }) {
   const borders = {
-    lime: 'border-t-lime-400', sky: 'border-t-sky-400', green: 'border-t-green-400',
-    coral: 'border-t-rose-400', violet: 'border-t-violet-400', orange: 'border-t-orange-400',
-    emerald: 'border-t-emerald-400', yellow: 'border-t-yellow-400', fuchsia: 'border-t-fuchsia-400'
+    lime: 'brorder-tlime-400', sky: 'brorder-tsky-400', green: 'brorder-tgreen-400',
+    coral: 'brorder-trose-400', violet: 'brorder-tviolet-400', orange: 'brorder-torange-400',
+    emerald: 'brorder-temerald-400', yellow: 'brorder-tyellow-400', fuchsia: 'brorder-tfuchsia-400'
   };
   const isUp = change > 0;
   return (
-    <div className={`card p-4 border-t-2 ${borders[accent] || 'border-t-lime-400'}`}>
+    <div className={`card p-4 brorder-t2 ${borders[accent] || 'brorder-tlime-400'}`}>
       <div className="flex items-start justify-between mb-2">
         <p className="text-xs text-muted uppercase tracking-widest font-semibold">{label}</p>
         {Icon && <div className="w-7 h-7 rounded-md bg-white/5 flex items-center justify-center"><Icon size={14} className="text-muted" /></div>}

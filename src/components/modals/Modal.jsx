@@ -101,7 +101,7 @@ export function FormActions({ onClose, loading, submitLabel = 'Save' }) {
         className="btn-ghost text-xs px-4 py-2">Cancel</button>
       <button type="submit" disabled={loading}
         className="btn-primary text-xs px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-        {loading && <span className="w-3 h-3 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />}
+        {loading && <span className="w-3 h-3 border-2 border-bg/30 brorder-tbg rounded-full animate-spin" />}
         {loading ? 'Saving…' : submitLabel}
       </button>
     </div>
