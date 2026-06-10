@@ -326,7 +326,7 @@ export default function LoginPage() {
     if (newPassword !== confirmPass) return toast.error('Passwords do not match');
     setLoading(true);
     try {
-      const res = await authApi.resetPassword({ resetToken, password: newPassword });
+      const res = await authApi.resetPassword({ resetToken, password: newPassword, confirmPassword: confirmPass });
       toast.success(res?.message || 'Password reset! Please sign in.');
       setNewPassword(''); setConfirmPass('');
       go('signin');
