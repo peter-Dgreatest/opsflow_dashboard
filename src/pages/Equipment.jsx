@@ -43,11 +43,17 @@ export function EquipmentPage() {
   const [modal, setModal] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [tab, setTab] = useState('active');
 
-  const { data: equipment = [], isLoading } = useQuery({ queryKey: ['equipment'], queryFn: equipmentApi.list, select: normalize });
+  const { data: equipment = [], isLoading } = useQuery({
+    queryKey: ['equipment', tab],
+    queryFn: () => equipmentApi.list(tab === 'deprecated' ? { status: 'deprecated' } : undefined),
+    select: normalize,
+  });
 
   const createMut = useMutation({ mutationFn: equipmentApi.create, onSuccess: () => { qc.invalidateQueries(['equipment']); toast.success('Equipment added'); setModal(null); }, onError: e => toast.error(e.message) });
   const updateMut = useMutation({ mutationFn: ({ id, data }) => equipmentApi.update(id, data), onSuccess: () => { qc.invalidateQueries(['equipment']); toast.success('Updated'); setModal(null); }, onError: e => toast.error(e.message) });
+  const restoreMut = useMutation({ mutationFn: (id) => equipmentApi.update(id, { status: 'active' }), onSuccess: () => { qc.invalidateQueries(['equipment']); toast.success('Restored'); }, onError: e => toast.error(e.message) });
   const deleteMut = useMutation({ mutationFn: equipmentApi.delete, onSuccess: () => { qc.invalidateQueries(['equipment']); toast.success('Deleted'); setDeleting(null); }, onError: e => toast.error(e.message) });
 
   const totalCost = equipment.reduce((s, e) => s + (e.totalCostOfPurchase || 0), 0);
@@ -71,8 +77,14 @@ export function EquipmentPage() {
     {
       label: '', render: r => (
         <div className="flex gap-1.5">
-          <button onClick={() => { setEditing(r); setModal('edit'); }} className="w-6 h-6 rounded bg-white/5 text-muted hover:text-text flex items-center justify-center cursor-pointer"><Pencil size={11} /></button>
-          <button onClick={() => setDeleting(r)} className="w-6 h-6 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center cursor-pointer"><Trash2 size={11} /></button>
+          {tab === 'deprecated' ? (
+            <button onClick={() => restoreMut.mutate(r.id)} className="px-2 h-6 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center cursor-pointer text-[10px] font-medium">Restore</button>
+          ) : (
+            <>
+              <button onClick={() => { setEditing(r); setModal('edit'); }} className="w-6 h-6 rounded bg-white/5 text-muted hover:text-text flex items-center justify-center cursor-pointer"><Pencil size={11} /></button>
+              <button onClick={() => setDeleting(r)} className="w-6 h-6 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center cursor-pointer"><Trash2 size={11} /></button>
+            </>
+          )}
         </div>
       )
     },
@@ -90,7 +102,12 @@ export function EquipmentPage() {
           <KpiCard label="Total Value" value={fmtCompact(totalCost)} accent="yellow" icon={DollarSign} />
           <KpiCard label="Inactive" value={equipment.length - active} accent="coral" icon={HardDrive} />
         </div>
-        <Card title="Equipment Inventory">
+        <Card title="Equipment Inventory" actions={
+          <div className="flex gap-1 bg-white/5 rounded-lg p-0.5">
+            <button onClick={() => setTab('active')} className={`px-3 py-1 rounded-md text-[11px] font-medium cursor-pointer ${tab === 'active' ? 'bg-white/10 text-text' : 'text-muted hover:text-text'}`}>Active</button>
+            <button onClick={() => setTab('deprecated')} className={`px-3 py-1 rounded-md text-[11px] font-medium cursor-pointer ${tab === 'deprecated' ? 'bg-white/10 text-text' : 'text-muted hover:text-text'}`}>Deprecated</button>
+          </div>
+        }>
           {isLoading ? <div className="py-16 text-center text-muted text-xs">Loading…</div> : <DataTable columns={COLS} data={equipment} pageSize={12} />}
         </Card>
       </div>
