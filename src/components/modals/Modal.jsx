@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 export function Modal({ title, open, onClose, children, width = 'max-w-lg' }) {
@@ -92,6 +92,33 @@ export function Select({ label, error, required, options = [], ...props }) {
 
 export function FormRow({ children }) {
   return <div className="grid grid-cols-2 gap-3">{children}</div>;
+}
+
+export function ConfirmDialog({ open, onClose, onConfirm, title, message, loading, countdown = 5 }) {
+  const [count, setCount] = useState(countdown);
+
+  useEffect(() => {
+    if (!open) { setCount(countdown); return; }
+    if (count <= 0) return;
+    const t = setTimeout(() => setCount(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [open, count, countdown]);
+
+  return (
+    <Modal open={open} onClose={onClose} title={title} width="max-w-sm">
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{message}</p>
+      <p className="text-xs text-rose-500 font-medium mb-5">This action is permanent and cannot be undone.</p>
+      <div className="flex gap-2 justify-end pt-2 border-t border-border">
+        <button type="button" onClick={onClose}
+          className="btn-ghost text-xs px-4 py-2">Cancel</button>
+        <button type="button" onClick={onConfirm} disabled={count > 0 || loading}
+          className="text-xs px-4 py-2 rounded-lg bg-rose-500 text-white font-medium hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors">
+          {loading && <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+          {count > 0 ? `Delete (${count})` : loading ? 'Deleting…' : 'Delete'}
+        </button>
+      </div>
+    </Modal>
+  );
 }
 
 export function FormActions({ onClose, loading, submitLabel = 'Save' }) {

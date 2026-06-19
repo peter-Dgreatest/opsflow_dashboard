@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { jobDetailApi } from '../api/jobDetailApi';
 import { equipmentApi, crewApi } from '../api/endpoints';
-import { Modal, Input, Textarea, Select, FormRow, FormActions } from '../components/modals/Modal';
+import { Modal, Input, Textarea, Select, FormRow, FormActions, ConfirmDialog } from '../components/modals/Modal';
 import { fmt, fmtCompact, fmtDate } from '../utils/format';
 import { ArrowLeft, Pencil, Menu } from 'lucide-react';
 
@@ -588,6 +588,7 @@ export default function JobDetailPage({
     const jobId = jobProp?.id;
     //console.log(jobId);
     const [modal, setModal] = useState(null);
+    const [confirm, setConfirm] = useState(null);
 
     const { setOpen } = useMobileMenu();
 
@@ -911,8 +912,8 @@ export default function JobDetailPage({
                             secondary={`${fmtCurrency(p.unitCost)} × ${p.daysUsed} day(s)${p.rentalDates?.length ? ' · ' + p.rentalDates.map(r => fmtDate(r.bookedDate)).join(', ') : ''}`}
                             amount={p.totalCost}
                             amountClass="text-green-600"
-                            onDelete={() => delInhouseRental.mutate(p.id)}
-                            loading={delPayment.isPending}
+                            onDelete={() => setConfirm({ title: 'Remove In-House Rental', message: `Remove "${p.itemName}" rental from this job?`, fn: () => delInhouseRental.mutate(p.id), loading: () => delInhouseRental.isPending })}
+                            loading={delInhouseRental.isPending}
                         />
                     </>
                 )}
@@ -923,7 +924,7 @@ export default function JobDetailPage({
                     <CostRow key={item.id} primary={item.itemName || item.item_name}
                         secondary={`${item.supplierName || item.supplier_name} · qty ${item.quantity} · ${item.daysUsed || item.days_used} day(s)`}
                         amount={parseFloat(item.totalCost || item.total_cost)} amountClass="text-sky-600"
-                        onDelete={() => delOutsourcedRental.mutate(item.id)} loading={delOutsourcedRental.isPending} />
+                        onDelete={() => setConfirm({ title: 'Remove Outsourced Rental', message: `Remove "${item.itemName || item.item_name}" from this job?`, fn: () => delOutsourcedRental.mutate(item.id) })} loading={delOutsourcedRental.isPending} />
                 )} />
 
                 <SubSectionHeader title="Inhouse Staff" actionLabel="+ Assign" onAction={() => setModal('crew-inhouse')} />
@@ -931,7 +932,7 @@ export default function JobDetailPage({
                     <CostRow key={c.id} primary={c.staffName || c.name}
                         secondary={`${c.role || '—'} · paid: ${fmtCurrency(c.amountPaid || 0)} · outstanding: ${fmtCurrency(c.amountOutstanding || 0)}`}
                         amount={parseFloat(c.amountToPay)} amountClass="text-amber-600"
-                        onDelete={() => delInhouseCrew.mutate(c.id)} loading={delInhouseCrew.isPending} />
+                        onDelete={() => setConfirm({ title: 'Remove Inhouse Staff', message: `Remove ${c.staffName || c.name}${c.role ? ` (${c.role})` : ''} from this job?`, fn: () => delInhouseCrew.mutate(c.id) })} loading={delInhouseCrew.isPending} />
                 )} />
 
                 <SubSectionHeader title="Outsourced Contractors" actionLabel="+ Add" onAction={() => setModal('crew-outsourced')} />
@@ -939,7 +940,7 @@ export default function JobDetailPage({
                     <CostRow key={c.id} primary={c.contractorName || c.staffName}
                         secondary={`${c.role || '—'} · outstanding: ${fmtCurrency(c.amountOutstanding || 0)}`}
                         amount={parseFloat(c.agreedAmount)} amountClass="text-pink-600"
-                        onDelete={() => delOutsourcedCrew.mutate({ jobId, id: c.id })} loading={delOutsourcedCrew.isPending} />
+                        onDelete={() => setConfirm({ title: 'Remove Contractor', message: `Remove ${c.contractorName || c.staffName}${c.role ? ` (${c.role})` : ''} from this job?`, fn: () => delOutsourcedCrew.mutate({ jobId, id: c.id }) })} loading={delOutsourcedCrew.isPending} />
                 )} />
 
                 <SubSectionHeader title="Purchase Items" actionLabel="+ Add" onAction={() => setModal('purchase')} />
@@ -947,14 +948,14 @@ export default function JobDetailPage({
                     <CostRow key={item.id} primary={item.itemName}
                         secondary={`${item.sourceType} · qty ${item.quantity}${item.unit ? ' ' + item.unit : ''}`}
                         amount={parseFloat(item.totalCost)} amountClass="text-violet-600"
-                        onDelete={() => delPurchase.mutate(item.id)} loading={delPurchase.isPending} />
+                        onDelete={() => setConfirm({ title: 'Remove Purchase Item', message: `Remove "${item.itemName}" from this job?`, fn: () => delPurchase.mutate(item.id) })} loading={delPurchase.isPending} />
                 )} />
 
                 <SubSectionHeader title="Expenses" actionLabel="+ Log" onAction={() => setModal('expense')} />
                 <CollapsibleCard items={expenses} emptyText="No expenses logged yet." previewCount={3} renderItem={(e) => (
                     <CostRow key={e.expenseId} primary={e.purpose || e.notes || '—'}
                         secondary={e.tag?.replace(/_/g, ' ')} amount={parseFloat(e.amount)} amountClass="text-yellow-600"
-                        onDelete={() => delExpense.mutate(e.expenseId)} loading={delExpense.isPending} />
+                        onDelete={() => setConfirm({ title: 'Delete Expense', message: `Delete expense "${e.purpose || e.notes || 'this expense'}"?`, fn: () => delExpense.mutate(e.expenseId) })} loading={delExpense.isPending} />
                 )} />
 
                 <SubSectionHeader title="Payments" actionLabel="+ Record" onAction={() => setModal('payment')} />
@@ -964,7 +965,7 @@ export default function JobDetailPage({
                             {i === 0 && (<><div className="flex justify-between items-center py-2"><span className="text-xs text-gray-400">Total paid</span><span className="font-mono text-xs font-semibold text-green-600">{fmtCurrency(arr.reduce((s, x) => s + parseFloat(x.amount || 0), 0))}</span></div><Divider /></>)}
                             <CostRow primary={fmtDate(p.datePaid)} secondary={`${p.method?.toUpperCase()}${p.notes ? ' · ' + p.notes : ''}`}
                                 amount={parseFloat(p.amount)} amountClass="text-green-600"
-                                onDelete={() => delPayment.mutate(p.paymentId)} loading={delPayment.isPending} />
+                                onDelete={() => setConfirm({ title: 'Delete Payment', message: `Delete ${p.method?.toUpperCase()} payment of ${fmtCurrency(p.amount)} on ${fmtDate(p.datePaid)}?`, fn: () => delPayment.mutate(p.paymentId) })} loading={delPayment.isPending} />
                         </div>
                     )} />
 
@@ -1026,6 +1027,15 @@ export default function JobDetailPage({
             <Modal title="Record Payment" open={modal === 'payment'} onClose={() => setModal(null)}>
                 <AddPaymentForm jobId={jobId} customerCode={job.customerCode} loading={addPayment.isPending} onClose={() => setModal(null)} onSubmit={d => addPayment.mutate(d)} />
             </Modal>
+
+            <ConfirmDialog
+                open={!!confirm}
+                onClose={() => setConfirm(null)}
+                onConfirm={() => { confirm?.fn(); setConfirm(null); }}
+                loading={delInhouseRental.isPending || delOutsourcedRental.isPending || delInhouseCrew.isPending || delOutsourcedCrew.isPending || delPurchase.isPending || delExpense.isPending || delPayment.isPending}
+                title={confirm?.title}
+                message={confirm?.message}
+            />
         </div>
     );
 }
